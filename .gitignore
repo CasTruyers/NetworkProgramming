@@ -73,3 +73,6 @@ build/
 
 # Libraries
 libraries/
+
+# Cmake
+CMakelLists.txt
