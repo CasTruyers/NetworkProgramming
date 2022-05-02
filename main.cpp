@@ -64,22 +64,73 @@ int main()
 
 int checkRows(int **board)
 {
-    int c1, c2;
-    for (int i = 0; i < 6; i++)
+    int c1h, c2h, c1v, c2v, c1dr, c2dr, c1dl, c2dl;
+    for (int i = 0; i < 7; i++)
     {
-        c1 = 0, c2 = 0;
+        c1h = 0, c2h = 0, c1v = 0, c2v = 0;
         for (int j = 0; j < 7; j++)
         {
-            if (board[i][j] == 1)
-                c1++, c2 = 0;
-            else if (board[i][j] == 2)
-                c1 = 0, c2++;
-            else
-                c1 = 0, c2 = 0;
+            if (i < 6)
+            {
+                // horizontal check
+                if (board[i][j] == 1)
+                    c1h++, c2h = 0;
+                else if (board[i][j] == 2)
+                    c1h = 0, c2h++;
+                else
+                    c1h = 0, c2h = 0;
+            }
 
-            if (c1 == 4)
+            if (j < 6)
+            {
+                // vertical check
+                if (board[j][i] == 1)
+                    c1v++, c2v = 0;
+                else if (board[j][i] == 2)
+                    c1v = 0, c2v++;
+                else
+                    c1v = 0, c2v = 0;
+            }
+
+            if (c1h == 4 || c1v == 4)
                 return 1;
-            else if (c2 == 4)
+            else if (c2h == 4 || c2v == 4)
+                return 2;
+        }
+    }
+
+    // diagonal
+
+    for (int r = 0; r < 3; r++)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            c1dr = 0, c2dr = 0, c1dl = 0, c2dl = 0;
+            // right
+            for (int j = 0; j < 4; j++)
+            {
+                if (board[3 - j + r][i + j] == 1)
+                    c1dr++, c2dr = 0;
+                else if (board[3 - j + r][i + j] == 2)
+                    c1dr = 0, c2dr++;
+                else
+                    c1dr = 0, c2dr = 0;
+            }
+
+            // left
+            for (int j = 0; j < 4; j++)
+            {
+                if (board[j + r][3 + j - i] == 1)
+                    c1dl++, c2dl = 0;
+                else if (board[j + r][3 + j - i] == 2)
+                    c1dl = 0, c2dl++;
+                else
+                    c1dl = 0, c2dl = 0;
+            }
+
+            if (c1dr == 4 || c1dl == 4)
+                return 1;
+            else if (c2dr == 4 || c2dl == 4)
                 return 2;
         }
     }
