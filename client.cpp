@@ -15,6 +15,8 @@ int main()
     bool me;
     unsigned first;
     unsigned last;
+    string action;
+    bool currentPlayer;
 
     // Subscribe to server
 
@@ -53,6 +55,29 @@ int main()
     cout << players[0] << " is player 1\n"
          << players[1] << " is player 2\n"
          << "I am player " << me + 1 << endl;
+
+    while (action != "quit")
+    {
+        sockSub.recv(z_in);
+        msg_in = z_in->to_string();
+        action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.length());
+        istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> currentPlayer;
+        cout << "action: " << action << endl
+             << "currentPlayer: " << currentPlayer << endl;
+
+        cin.clear();
+        fflush(stdin);
+        if (currentPlayer == me)
+        {
+            cout << "press enter to make move" << endl;
+            cin.ignore();
+            msg_out = "connectFourPlayer>" + to_string(me) + ">done";
+            z_out.rebuild(msg_out.data(), msg_out.length());
+            sockPush.send(z_out);
+        }
+        else
+            cout << players[!me] << " is making a move" << endl;
+    }
 
     // cleanup
 

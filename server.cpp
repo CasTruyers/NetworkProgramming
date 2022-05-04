@@ -15,6 +15,7 @@ int main()
     string players[2];
     unsigned first;
     unsigned last;
+    bool currenPlayer;
 
     // Push and Sub client socket
 
@@ -51,29 +52,19 @@ int main()
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush.send(z_out);
 
-    // sockSub.sockSub.recv(z_in);
-    // msg_in = z_in.to_string();
-    // cout << msg_in << endl;
-    // first = msg_in.find_first_of('>');
-    // last = msg_in.find_last_of('>');
-    // players[0] = msg_in.substr(first + 1, last - first - 1);
-    // cout << players[0] << " is player 1!" << endl;
+    while (true)
+    {
+        if (currenPlayer)
+            msg_out = "connectFourServer>1>turn";
+        else
+            msg_out = "connectFourServer>0>turn";
 
-    // sockSub.recv(z_in);
-    // msg_in = z_in.to_string();
-    // cout << msg_in << endl;
-    // first = msg_in.find_first_of('>');
-    // last = msg_in.find_last_of('>');
-    // players[1] = msg_in.substr(first + 1, last - first - 1);
-    // cout << players[1] << " is player 2!" << endl;
-
-    // msg_out = "server>0>" + players[0];
-    // z_out.rebuild(msg_out.data(), msg_out.length());
-    // sockPub.send(z_out);
-
-    // msg_out = "server>1>" + players[1];
-    // z_out.rebuild(msg_out.data(), msg_out.length());
-    // sockPub.send(z_out);
+        z_out.rebuild(msg_out.data(), msg_out.length());
+        sockPush.send(z_out);
+        sockSub.recv(z_in);
+        cout << z_in->to_string() << endl;
+        currenPlayer = !currenPlayer;
+    }
 
     // // free connection
     delete z_in;
