@@ -9,9 +9,13 @@ void logUsers(string &player1, string &player2);
 void enterToken(char input, bool currentPlayer, int **board);
 int checkRows(int **board);
 
+zmq::context_t ctx;
+
 int main()
 {
     string players[2];
+    unsigned first;
+    unsigned last;
     char column;
     bool currentPlayer = 0;
     int winner;
@@ -22,10 +26,9 @@ int main()
 
     for (int i = 0; i < 6; i++)
         for (int j = 0; j < 7; j++)
-            board[i][j] = 0;
+            board[i][j] = 1;
 
     logUsers(players[0], players[1]);
-
     while (true)
     {
         cout << players[currentPlayer] << " is aan de beurt:\n\n";
@@ -60,6 +63,11 @@ int main()
         }
         break;
     }
+
+    // free memory
+    for (int i = 0; i < 6; i++)
+        delete[] board[i];
+    delete[] board;
 }
 
 int checkRows(int **board)
@@ -72,7 +80,7 @@ int checkRows(int **board)
         {
             if (i < 6)
             {
-                // horizontal check
+                // horizontal
                 if (board[i][j] == 1)
                     c1h++, c2h = 0;
                 else if (board[i][j] == 2)
@@ -83,7 +91,7 @@ int checkRows(int **board)
 
             if (j < 6)
             {
-                // vertical check
+                // vertical
                 if (board[j][i] == 1)
                     c1v++, c2v = 0;
                 else if (board[j][i] == 2)
@@ -98,9 +106,7 @@ int checkRows(int **board)
                 return 2;
         }
     }
-
     // diagonal
-
     for (int r = 0; r < 3; r++)
     {
         for (int i = 0; i < 4; i++)
