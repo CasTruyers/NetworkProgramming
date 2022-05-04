@@ -6,13 +6,12 @@ using namespace std;
 
 int main()
 {
-    connectFourGame connectFour;
+    connectFourLocal connectFour;
     int winner;
 
     connectFour.logUser();
     while (true)
     {
-
         // Render playboard, this function clears screen!
         connectFour.render();
 

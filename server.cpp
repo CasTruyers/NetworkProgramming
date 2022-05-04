@@ -12,19 +12,21 @@ int main()
     zmq::message_t z_out;
     string msg_in;
     string msg_out;
+    string action;
+    string player;
     string players[2];
     unsigned first;
     unsigned last;
-    bool currenPlayer;
+    bool currentPlayer;
+    int i = 0;
 
     // Push and Sub client socket
-
-    zmq::socket_t sockPush(ctx, ZMQ_PUSH);
-    sockPush.connect("tcp://benternet.pxl-ea-ict.be:24041");
-
     zmq::socket_t sockSub(ctx, ZMQ_SUB);
     sockSub.connect("tcp://benternet.pxl-ea-ict.be:24042");
     sockSub.setsockopt(ZMQ_SUBSCRIBE, "connectFourPlayer>", 18);
+
+    zmq::socket_t sockPush(ctx, ZMQ_PUSH);
+    sockPush.connect("tcp://benternet.pxl-ea-ict.be:24041");
 
     // Receiving clients
 
@@ -54,16 +56,30 @@ int main()
 
     while (true)
     {
-        if (currenPlayer)
+        if (i > 5)
+            msg_out = "connectFourServer>1>quit";
+        else if (currentPlayer)
             msg_out = "connectFourServer>1>turn";
         else
             msg_out = "connectFourServer>0>turn";
 
         z_out.rebuild(msg_out.data(), msg_out.length());
         sockPush.send(z_out);
-        sockSub.recv(z_in);
-        cout << z_in->to_string() << endl;
-        currenPlayer = !currenPlayer;
+
+        // wait for client response, when action is "done" the client inserted a coin, break loop.
+        do
+        {
+            sockSub.recv(z_in);
+            msg_in = z_in->to_string();
+
+            action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.length());
+            istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> currentPlayer;
+        } while (action != "done");
+        cout << players[currentPlayer] << " is " << action << endl;
+
+        // next players turn
+        currentPlayer = !currentPlayer;
+        i++;
     }
 
     // // free connection

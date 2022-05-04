@@ -1,6 +1,119 @@
 #include "connectFour.hpp"
 
-connectFourGame::connectFourGame()
+connectFourClient::connectFourClient()
+{
+    sockSub = new zmq::socket_t(ctx, ZMQ_SUB);
+    sockSub->connect("tcp://benternet.pxl-ea-ict.be:24042");
+    sockSub->setsockopt(ZMQ_SUBSCRIBE, "connectFourServer>", 18);
+
+    sockPush = new zmq::socket_t(ctx, ZMQ_PUSH);
+    sockPush->connect("tcp://benternet.pxl-ea-ict.be:24041");
+
+    board = new int *[6];
+    for (int i = 0; i < 7; i++)
+        board[i] = new int[7];
+
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 7; j++)
+            board[i][j] = 0;
+}
+
+connectFourClient::~connectFourClient()
+{
+    sockSub->close();
+    sockPush->close();
+    // sockSub->disconnect("tcp://benternet.pxl-ea-ict.be:24042");
+    // sockSub->~socket_t();
+    // sockPush->disconnect("tcp://benternet.pxl-ea-ict.be:24041");
+    // sockPush->~socket_t();
+
+    delete z_in;
+    for (int i = 0; i < 6; i++)
+        delete[] board[i];
+    delete[] board;
+}
+
+void connectFourClient::join()
+{
+    cout << "Enter username: ";
+    cin >> name;
+
+    // create message with username, send to subscribed server, to join game.
+    msg_out = "connectFourPlayer>" + name + ">";
+    z_out.rebuild(msg_out.data(), msg_out.length());
+    sockPush->send(z_out);
+}
+
+void connectFourClient::waitForOpponent()
+{
+    cout << "\nwaiting for opponent...\n";
+
+    // opponent joined, server sending players.
+    sockSub->recv(z_in);
+    system("clear");
+    msg_in = z_in->to_string();
+    last = msg_in.find_last_of('>');
+    players[0] = msg_in.substr(last + 1, msg_in.length() - last - 1);
+
+    sockSub->recv(z_in);
+    msg_in = z_in->to_string();
+    last = msg_in.find_last_of('>');
+    players[1] = msg_in.substr(last + 1, msg_in.length() - last - 1);
+
+    if (players[0] == name)
+        me = 0;
+    else
+        me = 1;
+
+    cout << players[0] << " is player 1\n"
+         << players[1] << " is player 2\n\n"
+         << "I am player " << me + 1 << "\n\n";
+}
+
+bool connectFourClient::handleNetworkEvent()
+{
+    sockSub->recv(z_in);
+    msg_in = z_in->to_string();
+    action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.length());
+    istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
+    cout << "action: " << action << endl
+         << "currentPlayer: " << player << endl;
+
+    if (action == "turn")
+    {
+        if (player == me)
+        {
+            cin.clear();
+            fflush(stdin);
+            cout << "press enter to make move" << endl;
+            cin.ignore();
+            msg_out = "connectFourPlayer>" + to_string(me) + ">done";
+            z_out.rebuild(msg_out.data(), msg_out.length());
+            sockPush->send(z_out);
+        }
+        else
+            cout << players[!me] << " is making a move" << endl;
+    }
+    else if (action == "quit")
+    {
+        if (player == me)
+            cout << "You have left the game\n";
+        else
+            cout << players[player] << " left the game\n";
+
+        return 0;
+    }
+    else
+        cout << "undefined server action" << endl;
+
+    return 1;
+}
+
+//********************/
+//**connectFourLocal**/
+//********************/
+
+connectFourLocal::connectFourLocal()
 {
     board = new int *[6];
     for (int i = 0; i < 7; i++)
@@ -11,14 +124,14 @@ connectFourGame::connectFourGame()
             board[i][j] = 0;
 }
 
-connectFourGame::~connectFourGame()
+connectFourLocal::~connectFourLocal()
 {
     for (int i = 0; i < 6; i++)
         delete[] board[i];
     delete[] board;
 }
 
-void connectFourGame::logUser()
+void connectFourLocal::logUser()
 {
     system("clear");
     cout << "Klik op ENTER om de 2022 award winning 4-op-een-rij te spelen";
@@ -31,7 +144,7 @@ void connectFourGame::logUser()
     system("clear");
 }
 
-void connectFourGame::render()
+void connectFourLocal::render()
 {
     system("clear");
     cout << " 1 2 3 4 5 6 7" << endl;
@@ -55,7 +168,7 @@ void connectFourGame::render()
     cout << "\n";
 }
 
-bool connectFourGame::enterToken()
+bool connectFourLocal::enterToken()
 {
     cout << players[currentPlayer] << " -> place in column ('esc' to exit): ";
 
@@ -79,7 +192,7 @@ bool connectFourGame::enterToken()
     return 0;
 }
 
-void connectFourGame::updateBoard()
+void connectFourLocal::updateBoard()
 {
     // first token in column
     if (board[5][column - '0' - 1] == 0)
@@ -95,7 +208,7 @@ void connectFourGame::updateBoard()
             }
 }
 
-int connectFourGame::checkConnect()
+int connectFourLocal::checkConnect()
 {
     int c1h, c2h, c1v, c2v, c1dr, c2dr, c1dl, c2dl;
     for (int i = 0; i < 7; i++)
