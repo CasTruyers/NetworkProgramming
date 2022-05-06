@@ -15,6 +15,8 @@ int main()
     string action;
     string player;
     string players[2];
+    string substr;
+    string column;
     unsigned first;
     unsigned last;
     bool currentPlayer;
@@ -56,9 +58,7 @@ int main()
 
     while (true)
     {
-        if (i > 5)
-            msg_out = "connectFourServer>1>quit";
-        else if (currentPlayer)
+        if (currentPlayer)
             msg_out = "connectFourServer>1>turn";
         else
             msg_out = "connectFourServer>0>turn";
@@ -66,23 +66,33 @@ int main()
         z_out.rebuild(msg_out.data(), msg_out.length());
         sockPush.send(z_out);
 
-        // wait for client response, when action is "done" the client inserted a coin, break loop.
         do
         {
             sockSub.recv(z_in);
-            msg_in = z_in->to_string();
 
-            action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.length());
+            msg_in = z_in->to_string();
+            // message filtering
             istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> currentPlayer;
-        } while (action != "done");
-        cout << players[currentPlayer] << " is " << action << endl;
+            action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
+            if (action == "enter")
+                column = msg_in.substr(msg_in.find_last_of(":") + 1, 1);
+        } while (action != "enter" && action != "quit");
+
+        if (action == "enter")
+            msg_out = "connectFourServer>" + to_string(currentPlayer) + ">enter:" + column;
+        else if (action == "quit")
+            msg_out = "connectFourServer>" + to_string(currentPlayer) + ">quit";
+
+        cout << "Sending message: '" + msg_out + "'" << endl;
+        z_out.rebuild(msg_out.data(), msg_out.length());
+        sockPush.send(z_out);
 
         // next players turn
         currentPlayer = !currentPlayer;
         i++;
     }
 
-    // // free connection
+    // free connection
     delete z_in;
     sockSub.disconnect("tcp://benternet.pxl-ea-ict.be:24042");
     sockSub.close();

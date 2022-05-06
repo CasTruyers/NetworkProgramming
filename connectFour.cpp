@@ -72,22 +72,24 @@ void connectFourClient::waitForOpponent()
 
 bool connectFourClient::handleNetworkEvent()
 {
+    //! hier dus ook beter filteren op enter values
     sockSub->recv(z_in);
     msg_in = z_in->to_string();
-    action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.length());
+    action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
     istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
-    cout << "action: " << action << endl
+    cout << "\naction: " << action << endl
          << "currentPlayer: " << player << endl;
 
     if (action == "turn")
     {
         if (player == me)
         {
-            cin.clear();
-            fflush(stdin);
-            cout << "press enter to make move" << endl;
-            cin.ignore();
-            msg_out = "connectFourPlayer>" + to_string(me) + ">done";
+            if (enterToken())
+                msg_out = "connectFourPlayer>" + to_string(me) + ">quit:";
+            else
+                msg_out = "connectFourPlayer>" + to_string(me) + ">enter:" + column;
+
+            cout << "\nsending: " << msg_out << endl;
             z_out.rebuild(msg_out.data(), msg_out.length());
             sockPush->send(z_out);
         }
@@ -97,16 +99,89 @@ bool connectFourClient::handleNetworkEvent()
     else if (action == "quit")
     {
         if (player == me)
-            cout << "You have left the game\n";
+            cout << "You left the game\n";
         else
             cout << players[player] << " left the game\n";
 
         return 0;
     }
-    else
-        cout << "undefined server action" << endl;
+    else if (action == "enter")
+    {
+        receivedColumn = msg_in.substr(msg_in.find_last_of(":") + 1, 1);
+        column = receivedColumn.front();
+        cout << "message received: " << msg_in << endl
+             << "updating board on column: " << column << endl;
+        updateBoard();
+        render();
+    }
 
     return 1;
+}
+
+bool connectFourClient::enterToken()
+{
+    int returnVal;
+    render();
+    cin.clear();
+    fflush(stdin);
+    cout << "place in column ('esc' to exit): ";
+
+    while (true)
+    {
+        cin >> column;
+        // cout << "\nOK\n";
+        if (column == 27) // escape
+            returnVal = 1;
+        else if (board[0][column - '0' - 1] == 0) // Token can be placed
+            returnVal = 0;
+        else
+        {
+            cout << "column " << column << " is already full\nChoose an empty column ('esc' for exit): ";
+            continue;
+        }
+        break;
+    }
+    return returnVal;
+}
+
+void connectFourClient::updateBoard()
+{
+    // first token in column
+    if (board[5][column - '0' - 1] == 0)
+        board[5][column - '0' - 1] = player ? 2 : 1;
+
+    // search for last token in column x
+    else
+        for (int row = 0; (row < 5); row++)
+            if (board[row + 1][column - '0' - 1] != 0)
+            {
+                board[row][column - '0' - 1] = player ? 2 : 1;
+                break;
+            }
+}
+
+void connectFourClient::render()
+{
+    // system("clear");
+    cout << " 1 2 3 4 5 6 7" << endl;
+    for (int i = 0; i < 6; i++)
+    {
+        cout << '|';
+        for (int j = 0; j < 7; j++)
+        {
+            if (board[i][j] == 0)
+                cout << ' ';
+            else if (board[i][j] == 1)
+                cout << 'O';
+            else if (board[i][j] == 2)
+                cout << 'X';
+            else
+                cout << 'E';
+            cout << '|';
+        }
+        cout << "\n";
+    }
+    cout << "\n";
 }
 
 //********************/

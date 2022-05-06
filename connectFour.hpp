@@ -34,6 +34,7 @@ private:
     unsigned last;
     string action;
     string name;
+    string receivedColumn;
 };
 
 class connectFourLocal
