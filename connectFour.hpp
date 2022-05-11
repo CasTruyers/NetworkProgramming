@@ -72,22 +72,3 @@ private:
     string receivedColumn; //! hierover bart vragen
     int i;
 };
-
-class connectFourLocal
-{
-public:
-    string players[2];
-    connectFourLocal();
-    ~connectFourLocal();
-
-    void logUser();
-    void render();
-    bool enterToken();
-    int checkConnect();
-
-private:
-    void updateBoard();
-    int **board;
-    char column;
-    bool currentPlayer = 0;
-};

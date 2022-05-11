@@ -23,7 +23,6 @@ set(client_headers
 )
 
 set(main_headers
-	connectFour.hpp
 )
 
 set(server_sources
@@ -38,7 +37,6 @@ set(client_sources
 
 set(main_sources
 	main.cpp
-	connectFour.cpp
 )
 
 set(ALL_LIBS
