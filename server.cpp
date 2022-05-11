@@ -8,11 +8,11 @@ int main()
 
     connectFour.waitForPlayers();
 
-    while (connectFour.handleNetworkEvent())
+    while (connectFour.handleNetworkServerEvent())
     {
         connectFour.checkConnect();
 
-        if (connectFour.winner) //! getwinner()
+        if (connectFour.getWinner())
             break;
         else
             continue;
