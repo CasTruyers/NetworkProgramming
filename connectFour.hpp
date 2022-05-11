@@ -3,8 +3,7 @@
 #include <zmq_addon.hpp>
 using namespace std;
 
-// base class
-
+//* Base Class
 class connectFour
 {
 public:
@@ -31,6 +30,8 @@ protected:
     string action;
 };
 
+//* Client Class
+
 class connectFourClient : public connectFour
 {
 public:
@@ -46,6 +47,8 @@ private:
     bool me;
     string name;
 };
+
+//* Server Class
 
 class connectFourServer : public connectFour
 {

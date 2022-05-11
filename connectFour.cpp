@@ -106,7 +106,6 @@ bool connectFourClient::handleNetworkClientEvent()
     // cout << "\naction: " << action << endl
     //      << "currentPlayer: " << player << endl;
     system("clear");
-
     if (action == "turn")
     {
         if (player == me)
@@ -158,7 +157,7 @@ bool connectFourClient::enterToken()
     int returnVal;
     render();
     cin.clear();
-    fflush(stdin);
+    fflush(stdin); //! vraag aan bart
     cout << "place in column ('esc' to exit): ";
 
     while (true)
@@ -181,7 +180,6 @@ bool connectFourClient::enterToken()
 
 void connectFourClient::render()
 {
-    // system("clear");
     cout << " 1 2 3 4 5 6 7" << endl;
     for (int i = 0; i < 6; i++)
     {
@@ -250,9 +248,7 @@ bool connectFourServer::handleNetworkServerEvent()
     do
     {
         sockSub->recv(z_in);
-
         msg_in = z_in->to_string();
-        // message filtering
         istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
         action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
     } while (action != "enter" && action != "quit");
