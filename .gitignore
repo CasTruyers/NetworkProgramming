@@ -91,13 +91,15 @@ Temporary Items
 # Ignore code-workspaces
 *.code-workspace
 
-
 ### Project specific ###
 # Build
 build/
 
 # Libraries
 libraries/
+<<<<<<< HEAD
 
 # Cmake
 # CMakeLists.txt
+=======
+>>>>>>> serverOOP
