@@ -97,7 +97,7 @@ void connectFourClient::waitForOpponent()
          << "I am player " << me + 1 << "\n\n";
 }
 
-bool connectFourClient::handleNetworkClientEvent()
+bool connectFourClient::handleNetworkEvent()
 {
     sockSub->recv(z_in);
     msg_in = z_in->to_string();
@@ -235,7 +235,7 @@ void connectFourServer::waitForPlayers()
     sockPush->send(z_out);
 }
 
-bool connectFourServer::handleNetworkServerEvent()
+bool connectFourServer::handleNetworkEvent()
 {
     if (player)
         msg_out = "connectFourServer>1>turn";

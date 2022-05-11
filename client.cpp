@@ -10,7 +10,7 @@ int main()
 
     connectFour.waitForOpponent();
 
-    while (connectFour.handleNetworkClientEvent())
+    while (connectFour.handleNetworkEvent())
     {
     };
 

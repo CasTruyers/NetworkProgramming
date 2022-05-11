@@ -8,7 +8,7 @@ int main()
 
     connectFour.waitForPlayers();
 
-    while (connectFour.handleNetworkServerEvent())
+    while (connectFour.handleNetworkEvent())
     {
         connectFour.checkConnect();
 

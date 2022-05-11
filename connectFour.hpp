@@ -31,7 +31,6 @@ protected:
 };
 
 //* Client Class
-
 class connectFourClient : public connectFour
 {
 public:
@@ -41,7 +40,7 @@ public:
     void render();
     bool enterToken();
     void waitForOpponent();
-    bool handleNetworkClientEvent();
+    bool handleNetworkEvent();
 
 private:
     bool me;
@@ -49,14 +48,13 @@ private:
 };
 
 //* Server Class
-
 class connectFourServer : public connectFour
 {
 public:
     connectFourServer();
 
     void waitForPlayers();
-    bool handleNetworkServerEvent();
+    bool handleNetworkEvent();
     void checkConnect();
     void declareWinner();
     int getWinner() { return winner; };
