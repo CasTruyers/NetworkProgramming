@@ -25,7 +25,7 @@ private:
     zmq::context_t ctx;
     zmq::socket_t *sockSub;
     zmq::socket_t *sockPush;
-    zmq::message_t *z_in = new zmq::message_t;
+    zmq::message_t *z_in;
     zmq::message_t z_out;
     string msg_in;
     string msg_out;
@@ -35,6 +35,42 @@ private:
     string action;
     string name;
     string receivedColumn;
+};
+
+class connectFourServer
+{
+public:
+    string players[2];
+    connectFourServer();
+    ~connectFourServer();
+
+    void waitForPlayers();
+    void render();
+    bool enterToken();
+    void checkConnect();
+    bool handleNetworkEvent();
+    void updateBoard();
+    void declareWinner();
+    int winner;
+
+private:
+    int **board;
+    char column;
+    bool player;
+    zmq::context_t ctx;
+    zmq::socket_t *sockSub;
+    zmq::socket_t *sockPush;
+    zmq::message_t *z_in;
+    zmq::message_t z_out;
+    string msg_in;
+    string msg_out;
+    bool me;
+    unsigned first;
+    unsigned last;
+    string action;
+    string name;
+    string receivedColumn; //! hierover bart vragen
+    int i;
 };
 
 class connectFourLocal

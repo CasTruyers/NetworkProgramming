@@ -22,6 +22,14 @@ int main()
     bool currentPlayer;
     int i = 0;
 
+    int **board = new int *[6];
+    for (int i = 0; i < 7; i++)
+        board[i] = new int[7];
+
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 7; j++)
+            board[i][j] = 0;
+
     // Push and Sub client socket
     zmq::socket_t sockSub(ctx, ZMQ_SUB);
     sockSub.connect("tcp://benternet.pxl-ea-ict.be:24042");
@@ -31,7 +39,6 @@ int main()
     sockPush.connect("tcp://benternet.pxl-ea-ict.be:24041");
 
     // Receiving clients
-
     sockSub.recv(z_in);
     msg_in = z_in->to_string();
     first = msg_in.find_first_of('>');
@@ -47,7 +54,6 @@ int main()
     cout << players[1] << " is player 2\n";
 
     // Push players to clients
-
     msg_out = "connectFourServer>0>" + players[0];
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush.send(z_out);
