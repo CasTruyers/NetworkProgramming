@@ -14,8 +14,5 @@ int main()
     {
     };
 
-    connectFour.~connectFourClient();
-    cout << "\nCiao!\n";
-
     return 1;
 }
