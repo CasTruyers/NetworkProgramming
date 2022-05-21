@@ -22,9 +22,6 @@ set(client_headers
 	connectFour.hpp
 )
 
-set(main_headers
-)
-
 set(server_sources
 	server.cpp
 	connectFour.cpp
@@ -35,9 +32,6 @@ set(client_sources
 	connectFour.cpp
 )
 
-set(main_sources
-	main.cpp
-)
 
 set(ALL_LIBS
 	libzmq.a
@@ -45,8 +39,6 @@ set(ALL_LIBS
 
 add_executable (server ${server_sources} ${server_headers})
 add_executable (client ${client_sources} ${client_headers})
-add_executable (main ${main_sources} ${main_headers})
 
 target_link_libraries(server ${ALL_LIBS})
 target_link_libraries(client ${ALL_LIBS})
-target_link_libraries(main ${ALL_LIBS})

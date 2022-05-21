@@ -1,6 +1,8 @@
 #pragma once
 #include <iostream>
 #include <zmq_addon.hpp>
+#include <thread>
+#include <chrono>
 using namespace std;
 
 //* Base Class
@@ -54,11 +56,13 @@ public:
     connectFourServer();
 
     void waitForPlayers();
+    void publishThreadID();
     bool handleNetworkEvent();
     void checkConnect();
-    void declareWinner();
+    void declareWinner(bool closeServer);
     int getWinner() { return winner; };
 
 private:
+    char *thisThreadID;
     int winner;
 };

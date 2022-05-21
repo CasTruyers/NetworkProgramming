@@ -66,7 +66,7 @@ void connectFourClient::join()
     cin >> name;
 
     // create message with username, send to subscribed server, to join game.
-    msg_out = "connectFourPlayer>" + name + ">";
+    msg_out = "connectFourPlayer>" + name + ">join:";
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
 }
@@ -211,15 +211,25 @@ connectFourServer::connectFourServer() : connectFour()
 
 void connectFourServer::waitForPlayers()
 {
-    sockSub->recv(z_in);
-    msg_in = z_in->to_string();
+    do
+    {
+        sockSub->recv(z_in);
+        msg_in = z_in->to_string();
+        action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
+    } while (action != "join");
+
     first = msg_in.find_first_of('>');
     last = msg_in.find_last_of('>');
     players[0] = msg_in.substr(first + 1, last - first - 1);
     cout << players[0] << " is player 1\n";
 
-    sockSub->recv(z_in);
-    msg_in = z_in->to_string();
+    do
+    {
+        sockSub->recv(z_in);
+        msg_in = z_in->to_string();
+        action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
+    } while (action != "join");
+
     first = msg_in.find_first_of('>');
     last = msg_in.find_last_of('>');
     players[1] = msg_in.substr(first + 1, last - first - 1);
@@ -235,12 +245,20 @@ void connectFourServer::waitForPlayers()
     sockPush->send(z_out);
 }
 
+// void connectFourServer::publishThreadID()
+// {
+//     thisThreadID = (idk hier)this_thread::get_id();
+//     msg_out = thisThreadID;
+//     z_out.rebuild(msg_out.data(), msg_out.length());
+//     sockPush->send(z_out);
+// }
+
 bool connectFourServer::handleNetworkEvent()
 {
     if (player)
-        msg_out = "connectFourServer>1>turn";
+        msg_out = "connectFourServer>1>turn:";
     else
-        msg_out = "connectFourServer>0>turn";
+        msg_out = "connectFourServer>0>turn:";
 
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
@@ -276,10 +294,18 @@ bool connectFourServer::handleNetworkEvent()
         return 1;
 }
 
-void connectFourServer::declareWinner()
+void connectFourServer::declareWinner(bool closeServer)
 {
-    cout << players[!player] << " wins.\n";
-    msg_out = "connectFourServer>" + to_string(winner - 1) + ">wins";
+    if (!closeServer)
+    {
+        msg_out = "connectFourServer>" + to_string(winner - 1) + ">wins:";
+        cout << players[!player] << " wins.\n";
+    }
+    else
+    {
+        msg_out = "connectFourServer>" + to_string(winner - 1) + ">close:";
+        cout << "Closing game thread: " << std::this_thread::get_id();
+    }
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
 }
