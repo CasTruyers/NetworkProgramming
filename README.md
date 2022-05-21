@@ -16,7 +16,7 @@ Connect Four is a two-player connection game, in which the players take turns dr
 - clone repository
 - In the cloned project, create folder **"libraries"**
 - In the folder "libraries", create folder **"include"**
-- install **zmq_addon** library using [brew](https://formulae.brew.sh/formula/cppzmq) or cloning the [github repository](https://github.com/zeromq/cppzmq/releases/tag/v4.8.1)
+- download **zmq_addon** library using [brew](https://formulae.brew.sh/formula/cppzmq) or cloning the [github repository](https://github.com/zeromq/cppzmq/releases/tag/v4.8.1)
 - Place the file **"zmq_addon.hpp"** in the include folder
 - run the command: **"Cmake -B build/"**
 - run **"make"** in the build folder
