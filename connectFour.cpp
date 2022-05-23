@@ -53,6 +53,7 @@ void connectFour::updateBoard()
             }
 }
 
+//* connectFourClient
 void connectFourClient::updateBoard()
 {
     cout << "\nupdating board on column: " << column << endl;
@@ -64,15 +65,15 @@ void connectFourClient::updateBoard()
             if (board[row + 1][column - '0' - 1] != 0)
             {
                 board[row][column - '0' - 1] = player ? 2 : 1;
+                inPlace = row * 7 + column;
                 break;
             }
 }
 
-//* connectFourClient
-
 connectFourClient::connectFourClient()
 {
     player = 0;
+    inPlace = 0;
     sockSub = new zmq::socket_t(ctx, ZMQ_SUB);
     sockSub->connect("tcp://benternet.pxl-ea-ict.be:24042");
     sockSub->setsockopt(ZMQ_SUBSCRIBE, "connectFourServer>", 18);
@@ -146,8 +147,9 @@ void connectFourClient::waitForOpponent()
          << "I am player " << me + 1 << "\n\n";
 }
 
-bool connectFourClient::handleNetworkEvent()
+int connectFourClient::handleNetworkEvent()
 {
+    render();
     sockSub->recv(z_in);
     msg_in = z_in->to_string();
     action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
@@ -156,39 +158,30 @@ bool connectFourClient::handleNetworkEvent()
     cout << "\naction: " << action << endl
          << "currentPlayer: " << player << endl;
 
-    if (action == "turn")
-    {
-        if (player == me)
-        {
-            if (enterToken())
-                msg_out = "connectFourPlayer>" + to_string(me) + ">quit:";
-            else
-                msg_out = "connectFourPlayer>" + to_string(me) + ">enter:" + column;
-
-            // cout << "\nsending: " << msg_out << endl;
-            z_out.rebuild(msg_out.data(), msg_out.length());
-            sockPush->send(z_out);
-        }
-        else
-            cout << players[!me] << " is making a move" << endl;
-    }
-    else if (action == "quit")
+    if (action == "quit")
     {
         if (player == me)
             cout << "You left the game\n";
         else
             cout << players[player] << " left the game\n";
 
-        return 0;
+        returnVal = 0;
+    }
+    else if (action == "turn")
+    {
+        if (player == me)
+            returnVal = 1; // user input token
+        else
+            returnVal = 2; // wait for opponent
     }
     else if (action == "enter")
     {
         receivedColumn = msg_in.substr(msg_in.find_last_of(":") + 1, 1);
         column = receivedColumn.front();
-        // cout << "message received: " << msg_in << endl
-        //      << "updating board on column: " << column << endl;
+        cout << "message received: " << msg_in << endl
+             << "updating board on column: " << column << endl;
         updateBoard();
-        render();
+        returnVal = 3; // enter token in playfield
     }
     else if (action == "wins")
     {
@@ -196,15 +189,27 @@ bool connectFourClient::handleNetworkEvent()
             cout << "You win the game! Congratulations " << players[me] << ".\n\n";
         else
             cout << "You suck, " << players[!me] << " wins the game.\n\n";
-        return 0;
+        returnVal = 4;
     }
 
-    return 1;
+    return returnVal;
+}
+
+void connectFourClient::sendAction(int type)
+{
+    if (type)
+        msg_out = "connectFourPlayer>" + to_string(me) + ">quit:";
+    else
+        msg_out = "connectFourPlayer>" + to_string(me) + ">enter:" + column;
+
+    cout << "\nsending: " << msg_out << endl;
+    z_out.rebuild(msg_out.data(), msg_out.length());
+    sockPush->send(z_out);
 }
 
 bool connectFourClient::enterToken()
 {
-    int returnVal;
+    int returnValue;
     render();
     cin.clear();
     fflush(stdin); //! vraag aan bart
@@ -215,9 +220,9 @@ bool connectFourClient::enterToken()
         cin >> column;
         // cout << "\nOK\n";
         if (column == 27) // escape
-            returnVal = 1;
+            returnValue = 1;
         else if (board[0][column - '0' - 1] == 0) // Token can be placed
-            returnVal = 0;
+            returnValue = 0;
         else
         {
             cout << "column " << column << " is already full\nChoose an empty column ('esc' for exit): ";
@@ -225,7 +230,7 @@ bool connectFourClient::enterToken()
         }
         break;
     }
-    return returnVal;
+    return returnValue;
 }
 
 void connectFourClient::render()

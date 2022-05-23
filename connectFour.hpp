@@ -41,13 +41,16 @@ public:
     void render();
     bool enterToken();
     void waitForOpponent();
-    bool handleNetworkEvent();
+    int handleNetworkEvent();
 
     void updateBoard();
+    void sendAction(int type);
+    void setColumn(int column) { this->column = column; }
 
     bool me;
     string name;
-
+    int returnVal;
+    int inPlace;
     string players[2];
     bool player;
     int **board;
