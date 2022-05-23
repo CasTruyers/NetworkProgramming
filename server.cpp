@@ -4,7 +4,7 @@
 #include "connectFour.hpp"
 
 bool newThread = 1;
-bool closeServer = 0;
+// bool closeServer = 0;
 
 void game()
 {
@@ -14,7 +14,7 @@ void game()
     connectFour.waitForPlayers();
     newThread = 1;
 
-    while (connectFour.handleNetworkEvent() & !closeServer)
+    while (connectFour.handleNetworkEvent()) //& !closeServer
     {
         connectFour.checkConnect();
 
@@ -23,19 +23,19 @@ void game()
         else
             continue;
     }
-    connectFour.declareWinner(closeServer);
+    connectFour.declareWinner();
 }
 
-void getInput()
-{
-    std::cin.get();
-    closeServer = 1;
-}
+// void getInput()
+// {
+//     std::cin.get();
+//     closeServer = 1;
+// }
 
 int main()
 {
-    std::thread close(getInput);
-    while (!closeServer)
+    // std::thread close(getInput);
+    while (true) // closeServer
     {
         // class hier instantiaten, waitForPLayer() en class pointer meegeven aan thread. Lastig om locatie van gameInstatie in vector bij te houden wanneer andere zich verwijderen uit vector.
         if (newThread)

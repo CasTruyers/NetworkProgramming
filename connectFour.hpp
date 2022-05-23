@@ -11,14 +11,12 @@ class connectFour
 public:
     connectFour();
     ~connectFour();
-
     void updateBoard();
 
-protected:
     string players[2];
     bool player;
     int **board;
-    string receivedColumn; //! hierover bart vragen
+    string receivedColumn; //! hierover vragen
     char column;
     zmq::context_t ctx;
     zmq::socket_t *sockSub;
@@ -33,10 +31,11 @@ protected:
 };
 
 //* Client Class
-class connectFourClient : public connectFour
+class connectFourClient
 {
 public:
     connectFourClient();
+    ~connectFourClient();
 
     void join();
     void render();
@@ -44,9 +43,26 @@ public:
     void waitForOpponent();
     bool handleNetworkEvent();
 
-private:
+    void updateBoard();
+
     bool me;
     string name;
+
+    string players[2];
+    bool player;
+    int **board;
+    string receivedColumn; //! hierover vragen
+    char column;
+    zmq::context_t ctx;
+    zmq::socket_t *sockSub;
+    zmq::socket_t *sockPush;
+    zmq::message_t *z_in;
+    zmq::message_t z_out;
+    string msg_in;
+    string msg_out;
+    unsigned first;
+    unsigned last;
+    string action;
 };
 
 //* Server Class
@@ -59,7 +75,7 @@ public:
     void publishThreadID();
     bool handleNetworkEvent();
     void checkConnect();
-    void declareWinner(bool closeServer);
+    void declareWinner();
     int getWinner() { return winner; };
 
 private:

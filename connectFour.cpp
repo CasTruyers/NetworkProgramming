@@ -53,11 +53,58 @@ void connectFour::updateBoard()
             }
 }
 
+void connectFourClient::updateBoard()
+{
+    cout << "\nupdating board on column: " << column << endl;
+
+    if (board[5][column - '0' - 1] == 0) // first token in column
+        board[5][column - '0' - 1] = player ? 2 : 1;
+    else // search for last token in column x
+        for (int row = 0; (row < 5); row++)
+            if (board[row + 1][column - '0' - 1] != 0)
+            {
+                board[row][column - '0' - 1] = player ? 2 : 1;
+                break;
+            }
+}
+
 //* connectFourClient
 
-connectFourClient::connectFourClient() : connectFour()
+connectFourClient::connectFourClient()
 {
+    player = 0;
+    sockSub = new zmq::socket_t(ctx, ZMQ_SUB);
+    sockSub->connect("tcp://benternet.pxl-ea-ict.be:24042");
     sockSub->setsockopt(ZMQ_SUBSCRIBE, "connectFourServer>", 18);
+
+    sockPush = new zmq::socket_t(ctx, ZMQ_PUSH);
+    sockPush->connect("tcp://benternet.pxl-ea-ict.be:24041");
+    z_in = new zmq::message_t;
+
+    board = new int *[6];
+    for (int i = 0; i < 7; i++)
+        board[i] = new int[7];
+
+    for (int i = 0; i < 6; i++)
+        for (int j = 0; j < 7; j++)
+            board[i][j] = 0;
+}
+
+connectFourClient::~connectFourClient()
+{
+    sockSub->disconnect("tcp://benternet.pxl-ea-ict.be:24042");
+    sockPush->disconnect("tcp://benternet.pxl-ea-ict.be:24041");
+    sockSub->close();
+    sockPush->close();
+    delete sockSub;
+    delete sockPush;
+
+    delete z_in;
+    for (int i = 0; i < 6; i++)
+    {
+        delete[] board[i];
+    }
+    delete[] board;
 }
 
 void connectFourClient::join()
@@ -68,7 +115,9 @@ void connectFourClient::join()
     // create message with username, send to subscribed server, to join game.
     msg_out = "connectFourPlayer>" + name + ">join:";
     z_out.rebuild(msg_out.data(), msg_out.length());
+    cout << "\nC: sending join request...\n";
     sockPush->send(z_out);
+    cout << "\nC: join request send\n";
 }
 
 void connectFourClient::waitForOpponent()
@@ -103,9 +152,10 @@ bool connectFourClient::handleNetworkEvent()
     msg_in = z_in->to_string();
     action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
     istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
-    // cout << "\naction: " << action << endl
-    //      << "currentPlayer: " << player << endl;
     system("clear");
+    cout << "\naction: " << action << endl
+         << "currentPlayer: " << player << endl;
+
     if (action == "turn")
     {
         if (player == me)
@@ -239,10 +289,12 @@ void connectFourServer::waitForPlayers()
     msg_out = "connectFourServer>0>" + players[0];
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
+    cout << "\nsend: " + msg_out;
 
     msg_out = "connectFourServer>1>" + players[1];
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
+    cout << "\nsend: " + msg_out;
 }
 
 // void connectFourServer::publishThreadID()
@@ -262,6 +314,7 @@ bool connectFourServer::handleNetworkEvent()
 
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
+    cout << "\nsend: " + msg_out;
 
     do
     {
@@ -294,18 +347,18 @@ bool connectFourServer::handleNetworkEvent()
         return 1;
 }
 
-void connectFourServer::declareWinner(bool closeServer)
+void connectFourServer::declareWinner()
 {
-    if (!closeServer)
-    {
-        msg_out = "connectFourServer>" + to_string(winner - 1) + ">wins:";
-        cout << players[!player] << " wins.\n";
-    }
-    else
-    {
-        msg_out = "connectFourServer>" + to_string(winner - 1) + ">close:";
-        cout << "Closing game thread: " << std::this_thread::get_id();
-    }
+    // if (!closeServer)
+    // {
+    msg_out = "connectFourServer>" + to_string(winner - 1) + ">wins:";
+    cout << players[!player] << " wins.\n";
+    // }
+    // else
+    // {
+    //     msg_out = "connectFourServer>" + to_string(winner - 1) + ">close:";
+    //     cout << "Closing game thread: " << std::this_thread::get_id();
+    // }
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
 }
