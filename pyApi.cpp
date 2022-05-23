@@ -14,5 +14,9 @@ PYBIND11_MODULE(module_name, handle)
         .def(py::init<>())
         .def("join", &connectFourClient::join)
         .def("waitForOpponent", &connectFourClient::waitForOpponent)
-        .def("handleNetworkEvent", &connectFourClient::handleNetworkEvent);
+        .def("handleNetworkEvent", &connectFourClient::handleNetworkEvent)
+        .def("setColumn", &connectFourClient::setColumn)
+        .def("getInPlace", &connectFourClient::getInPlace)
+        .def("getPlayer", &connectFourClient::getPlayer)
+        .def("sendAction", &connectFourClient::sendAction);
 };

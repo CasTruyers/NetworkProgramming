@@ -46,6 +46,8 @@ public:
     void updateBoard();
     void sendAction(int type);
     void setColumn(int column) { this->column = column; }
+    int getInPlace() { return inPlace; }
+    bool getPlayer() { return player; }
 
     bool me;
     string name;
