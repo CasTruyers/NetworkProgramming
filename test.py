@@ -8,5 +8,3 @@ client.waitForOpponent()
 
 while client.handleNetworkEvent():
     pass
-
-print("endOfPython")
