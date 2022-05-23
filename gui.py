@@ -10,4 +10,3 @@ while client.handleNetworkEvent():
     pass
 
 print("endOfPython")
-é

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <zmq_addon.hpp>
 #include <thread>
-#include <chrono>
 using namespace std;
 
 //* Base Class
@@ -13,6 +12,7 @@ public:
     ~connectFour();
     void updateBoard();
 
+protected:
     string players[2];
     bool player;
     int **board;
@@ -31,38 +31,19 @@ public:
 };
 
 //* Client Class
-class connectFourClient
+class connectFourClient : public connectFour
 {
 public:
     connectFourClient();
-    ~connectFourClient();
-
     void join();
     void render();
     bool enterToken();
     void waitForOpponent();
     bool handleNetworkEvent();
 
-    void updateBoard();
-
+private:
     bool me;
     string name;
-
-    string players[2];
-    bool player;
-    int **board;
-    string receivedColumn; //! hierover vragen
-    char column;
-    zmq::context_t ctx;
-    zmq::socket_t *sockSub;
-    zmq::socket_t *sockPush;
-    zmq::message_t *z_in;
-    zmq::message_t z_out;
-    string msg_in;
-    string msg_out;
-    unsigned first;
-    unsigned last;
-    string action;
 };
 
 //* Server Class
@@ -70,15 +51,12 @@ class connectFourServer : public connectFour
 {
 public:
     connectFourServer();
-
     void waitForPlayers();
-    void publishThreadID();
     bool handleNetworkEvent();
     void checkConnect();
     void declareWinner();
-    int getWinner() { return winner; };
+    int getWinner() const { return winner; };
 
 private:
-    char *thisThreadID;
     int winner;
 };

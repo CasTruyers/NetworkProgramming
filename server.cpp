@@ -1,5 +1,4 @@
 #include <iostream>
-#include <thread>
 #include <zmq_addon.hpp>
 #include "connectFour.hpp"
 
@@ -8,9 +7,9 @@ bool newThread = 1;
 
 void game()
 {
-    cout << "New thread\n";
+    cout << "new Thread" << endl;
+
     connectFourServer connectFour;
-    // thread id meegeven om communicatie tussen veschillende thread te scheiden
     connectFour.waitForPlayers();
     newThread = 1;
 
