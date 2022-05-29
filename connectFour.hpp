@@ -30,6 +30,8 @@ protected:
     unsigned first;
     unsigned last;
     string action;
+    string serverID;
+    string clientID;
 };
 
 //* Client Class
@@ -42,7 +44,6 @@ public:
     bool enterToken();
     void waitForOpponent();
     bool handleNetworkEvent();
-    void getGameID();
 
 private:
     bool me;
@@ -59,8 +60,6 @@ public:
     bool handleNetworkEvent();
     void checkConnect();
     void declareWinner();
-    void sendGameID();
-    int generateRandomNumber();
     int getWinner() const { return winner; };
 
 private:
