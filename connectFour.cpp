@@ -60,41 +60,84 @@ connectFourClient::connectFourClient() : connectFour()
     sockSub->setsockopt(ZMQ_SUBSCRIBE, "connectFourServer>", 18);
 }
 
+// void connectFourClient::getGameID()
+// {
+//     do
+//     {
+//         msg_out = "connectFourPlayer>gameID>";
+//         z_out.rebuild(msg_out.data(), msg_out.length());
+//         sockPush->send(z_out);
+
+//         sockSub->recv(z_in);
+//         msg_in = z_in->to_string();
+//         action = msg_in.substr(msg_in.find_first_of('>') + 1, msg_in.find_last_of('>') - msg_in.find_first_of('>') - 1);
+//         cout << "action: " + action << endl;
+//     } while (action != "gameID");
+
+//     gameID = msg_in.substr(msg_in.find_last_of(">") + 1, msg_in.find_last_of(':') - msg_in.find_last_of(">") - 1);
+//     cout << "GameID: " << gameID << endl;
+// }
+
 void connectFourClient::join()
 {
-    cout << "Enter username: ";
-    cin >> name;
 
-    // create message with username, send to subscribed server, to join game.
-    msg_out = "connectFourPlayer>" + name + ">join:";
-    z_out.rebuild(msg_out.data(), msg_out.length());
-    sockPush->send(z_out);
+    do
+    {
+        cout << "Enter username: ";
+        cin >> name;
+
+        // create message with username, send to subscribed server, to join game.
+        msg_out = "connectFourPlayer>" + name + ">join:";
+        z_out.rebuild(msg_out.data(), msg_out.length());
+        sockPush->send(z_out);
+
+        // receiving approval from server
+        sockSub->recv(z_in);
+        msg_in = z_in->to_string();
+        action = msg_in.substr(msg_in.find_first_of('>') + 1, msg_in.find_last_of('>') - msg_in.find_first_of('>') - 1);
+        cout << "Action: " + action << endl;
+    } while (action != "usernameApproved");
+    gameID = msg_in.substr(msg_in.find_last_of(">") + 1, msg_in.find_last_of(':') - msg_in.find_last_of(">") - 1);
+    cout << "Username Approved!\nGameID: " + gameID << endl;
 }
 
 void connectFourClient::waitForOpponent()
 {
     cout << "\nwaiting for opponent...\n";
 
-    // opponent joined, server sending players.
-    sockSub->recv(z_in);
-    system("clear");
-    msg_in = z_in->to_string();
+    // receiving players.
+    do
+    {
+        sockSub->recv(z_in);
+        msg_in = z_in->to_string();
+        action = msg_in.substr(msg_in.find_first_of('>') + 1, msg_in.find_last_of('>') - msg_in.find_first_of('>') - 1);
+        cout << "Action: " + action << endl;
+
+    } while (action != "0");
+
+    // system("clear");
     last = msg_in.find_last_of('>');
     players[0] = msg_in.substr(last + 1, msg_in.length() - last - 1);
+    cout << players[0] << " is player 1\n";
 
-    sockSub->recv(z_in);
-    msg_in = z_in->to_string();
+    do
+    {
+        sockSub->recv(z_in);
+        msg_in = z_in->to_string();
+        action = msg_in.substr(msg_in.find_first_of('>') + 1, msg_in.find_last_of('>') - msg_in.find_first_of('>') - 1);
+        cout << "Action: " + action << endl;
+
+    } while (action != "1");
     last = msg_in.find_last_of('>');
     players[1] = msg_in.substr(last + 1, msg_in.length() - last - 1);
+    cout << players[1] << " is player 2\n\n";
 
     if (players[0] == name)
         me = 0;
     else
         me = 1;
 
-    cout << players[0] << " is player 1\n"
-         << players[1] << " is player 2\n\n"
-         << "I am player " << me + 1 << "\n\n";
+    cout << "I am player " << me + 1 << "\n\n";
 }
 
 bool connectFourClient::handleNetworkEvent()
@@ -103,7 +146,7 @@ bool connectFourClient::handleNetworkEvent()
     msg_in = z_in->to_string();
     action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
     istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
-    system("clear");
+    // system("clear");
     cout << "\naction: " << action << endl
          << "currentPlayer: " << player << endl;
 
@@ -208,7 +251,17 @@ connectFourServer::connectFourServer() : connectFour()
 {
     winner = 0;
     sockSub->setsockopt(ZMQ_SUBSCRIBE, "connectFourPlayer>", 18);
+    srand((unsigned)time(0));
+    gameID = to_string((rand() % 100) + 1);
 }
+
+// void connectFourServer::sendGameID()
+// {
+//     msg_out = "connectFourServer>gameID>" + ;
+//     z_out.rebuild(msg_out.data(), msg_out.length());
+//     sockPush->send(z_out);
+//     cout << "sending: " + msg_out << endl;
+// }
 
 void connectFourServer::waitForPlayers()
 {
@@ -219,21 +272,45 @@ void connectFourServer::waitForPlayers()
         action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
     } while (action != "join");
 
+    // approve username
+    msg_out = "connectFourServer>usernameApproved>" + gameID + ":";
+    z_out.rebuild(msg_out.data(), msg_out.length());
+    sockPush->send(z_out);
+    cout << "\nsend: " + msg_out;
+
     first = msg_in.find_first_of('>');
     last = msg_in.find_last_of('>');
     players[0] = msg_in.substr(first + 1, last - first - 1);
-    cout << players[0] << " is player 1\n";
 
     do
     {
-        sockSub->recv(z_in);
-        msg_in = z_in->to_string();
-        action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
-    } while (action != "join");
+        do
+        {
+            sockSub->recv(z_in);
+            msg_in = z_in->to_string();
+            action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
+        } while (action != "join");
 
-    first = msg_in.find_first_of('>');
-    last = msg_in.find_last_of('>');
-    players[1] = msg_in.substr(first + 1, last - first - 1);
+        first = msg_in.find_first_of('>');
+        last = msg_in.find_last_of('>');
+        players[1] = msg_in.substr(first + 1, last - first - 1);
+
+        if (players[1] == players[0]) // send same username error
+        {
+            msg_out = "connectFourServer>usernameError>";
+            z_out.rebuild(msg_out.data(), msg_out.length());
+            sockPush->send(z_out);
+        }
+        else // approve username
+        {
+            msg_out = "connectFourServer>usernameApproved>" + gameID + ":";
+            z_out.rebuild(msg_out.data(), msg_out.length());
+            sockPush->send(z_out);
+        }
+        cout << "\nsend: " + msg_out;
+    } while (players[1] == players[0]); // unique username check
+
+    cout << players[0] << " is player 1\n";
     cout << players[1] << " is player 2\n";
 
     // Push players to clients
@@ -257,7 +334,7 @@ bool connectFourServer::handleNetworkEvent()
 
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
-    cout << "\nsend: " + msg_out;
+    cout << "\nsend: " + msg_out << endl;
 
     do
     {

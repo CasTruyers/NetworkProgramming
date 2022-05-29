@@ -2,6 +2,8 @@
 #include <iostream>
 #include <zmq_addon.hpp>
 #include <thread>
+#include <cstdlib>
+#include <ctime>
 using namespace std;
 
 //* Base Class
@@ -40,9 +42,11 @@ public:
     bool enterToken();
     void waitForOpponent();
     bool handleNetworkEvent();
+    void getGameID();
 
 private:
     bool me;
+    string gameID;
     string name;
 };
 
@@ -55,8 +59,12 @@ public:
     bool handleNetworkEvent();
     void checkConnect();
     void declareWinner();
+    void sendGameID();
+    int generateRandomNumber();
     int getWinner() const { return winner; };
 
 private:
     int winner;
+    string gameID;
+    string firstPlayer;
 };
