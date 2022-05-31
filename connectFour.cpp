@@ -247,20 +247,32 @@ void connectFourServer::waitForPlayers()
 {
     do
     {
-        sockSub->recv(z_in);
-        msg_in = z_in->to_string();
-        action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
-    } while (action != "join");
+        do
+        {
+            sockSub->recv(z_in);
+            msg_in = z_in->to_string();
+            action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
+        } while (action != "join");
 
-    // approve username
-    msg_out = "connectFourServer>usernameApproved>" + gameID + ":";
-    z_out.rebuild(msg_out.data(), msg_out.length());
-    sockPush->send(z_out);
-    cout << "\nsend: " + msg_out;
-
-    first = msg_in.find_first_of('>');
-    last = msg_in.find_last_of('>');
-    players[0] = msg_in.substr(first + 1, last - first - 1);
+        first = msg_in.find_first_of('>');
+        last = msg_in.find_last_of('>');
+        players[0] = msg_in.substr(first + 1, last - first - 1);
+        if (players[0] != "shit")
+        {
+            // approve username
+            msg_out = "connectFourServer>usernameApproved>" + gameID + ":";
+            z_out.rebuild(msg_out.data(), msg_out.length());
+            sockPush->send(z_out);
+            cout << "\nsend: " + msg_out;
+            break;
+        }
+        else
+        {
+            msg_out = "connectFourServer>usernameError>";
+            z_out.rebuild(msg_out.data(), msg_out.length());
+            sockPush->send(z_out);
+        }
+    } while (true);
 
     do
     {
@@ -275,7 +287,7 @@ void connectFourServer::waitForPlayers()
         last = msg_in.find_last_of('>');
         players[1] = msg_in.substr(first + 1, last - first - 1);
 
-        if (players[1] == players[0]) // send same username error
+        if (players[1] == players[0] or players[1] == "shit") // send same username error
         {
             msg_out = "connectFourServer>usernameError>";
             z_out.rebuild(msg_out.data(), msg_out.length());
@@ -288,7 +300,7 @@ void connectFourServer::waitForPlayers()
             sockPush->send(z_out);
         }
         cout << "\nsend: " + msg_out;
-    } while (players[1] == players[0]); // unique username check
+    } while (players[1] == players[0] or players[1] == "shit"); // unique username check
 
     sockSub->setsockopt(ZMQ_SUBSCRIBE, clientID.data(), clientID.length());
     sockSub->setsockopt(ZMQ_UNSUBSCRIBE, "connectFourClient>", 18);
