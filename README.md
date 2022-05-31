@@ -9,8 +9,11 @@ Connect Four is a two-player connection game, in which the players take turns dr
 ## Features:
 
 - Start Multiple Connect-Four games simultaneously
-- Play against each other from across the globe.
-- Play through a GUI or terminal
+- Play against each other on different clients.
+- Different games can be played simultaneously.
+- Checking for same username conflict or unmature usernames.
+- Run with python or compiled C++ executable.
+- C++ functions accessible in python trough pybind API wrapping.
 
 ## How to compile:
 - clone repository
@@ -21,3 +24,4 @@ Connect Four is a two-player connection game, in which the players take turns dr
 - run the command: **"Cmake -B build/"**
 - run **"make"** in the build folder
 - Client and server application is created in the build folder
+- run executables or python code (python3 test.py)
