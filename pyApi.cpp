@@ -9,7 +9,7 @@ PYBIND11_MODULE(module_name, handle)
     // py::class_<connectFour>(handle, "pyConnectFour")
     //     .def(py::init<>())
     //     .def("updateBoard", &connectFour::updateBoard);
-
+    
     py::class_<connectFourClient>(handle, "PyConnectFourClient")
         .def(py::init<>())
         .def("join", &connectFourClient::join)
