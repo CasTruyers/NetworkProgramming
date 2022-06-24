@@ -62,10 +62,13 @@ public:
     void waitForPlayers();
     bool handleNetworkEvent();
     void checkConnect();
-    void declareWinner();
+    int declareWinner();
     int getWinner() const { return winner; };
 
 private:
+    bool holded = false;
+    int count3 = 0; // p1 wint na hold
+    int count4 = 0; // p2 wint na hold
     int winner;
     string gameID;
     string firstPlayer;

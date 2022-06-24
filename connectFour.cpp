@@ -335,6 +335,8 @@ void connectFourServer::waitForPlayers()
 
 bool connectFourServer::handleNetworkEvent()
 {
+    if (wait == 0)
+        playerHold = 2;
     while (true)
     {
         if (player)
@@ -365,7 +367,8 @@ bool connectFourServer::handleNetworkEvent()
         {
             msg_out = serverID + to_string(player) + ">hold:";
             playerHold = player;
-            wait = 3;
+            wait = 4;
+            holded = true;
         }
         else if (action == "quit")
             msg_out = serverID + to_string(player) + ">quit:";
@@ -376,15 +379,15 @@ bool connectFourServer::handleNetworkEvent()
 
         cout << "playerhold: " << playerHold << "player: " << player << endl;
 
-        if (wait == 1)
-            wait = 0;
+        if (wait == 2)
+            wait = 1;
         else
         {
             player = !player;
             if (wait)
                 wait--;
         }
-
+        cout << playerHold << endl;
         if (action == "quit")
             return 0;
         else if (action == "hold")
@@ -394,12 +397,23 @@ bool connectFourServer::handleNetworkEvent()
     }
 }
 
-void connectFourServer::declareWinner()
+int connectFourServer::declareWinner()
 {
     msg_out = serverID + to_string(winner - 1) + ">wins:";
     cout << players[!player] << " wins.\n";
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
+
+    if (!holded && winner == 1)
+        return 1;
+    else if (!holded && winner == 2)
+        return 2;
+    else if (playerHold == 0)
+        return 3;
+    else if (playerHold == 1)
+        return 4;
+    else
+        return 0;
 }
 
 void connectFourServer::checkConnect()
