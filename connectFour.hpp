@@ -15,6 +15,9 @@ public:
     void updateBoard();
 
 protected:
+    int wait = 0;
+    int playerHold = 2;
+    int tempInt;
     string players[2];
     bool player;
     int **board;
@@ -41,7 +44,7 @@ public:
     connectFourClient();
     void join();
     void render();
-    bool enterToken();
+    int enterToken();
     void waitForOpponent();
     bool handleNetworkEvent();
 

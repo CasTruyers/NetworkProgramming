@@ -140,10 +140,15 @@ bool connectFourClient::handleNetworkEvent()
     {
         if (player == me)
         {
-            if (enterToken())
+            tempInt = enterToken();
+            if (tempInt == 0)
                 msg_out = clientID + to_string(me) + ">quit:";
-            else
+            else if (tempInt == 1)
+                msg_out = clientID + to_string(me) + ">hold:";
+            else if (tempInt == 2)
                 msg_out = clientID + to_string(me) + ">enter:" + column;
+            else
+                cout << "\nerror\n";
 
             cout << "\nsending: " << msg_out << endl;
             z_out.rebuild(msg_out.data(), msg_out.length());
@@ -170,6 +175,13 @@ bool connectFourClient::handleNetworkEvent()
         updateBoard();
         render();
     }
+    else if (action == "hold")
+    {
+        if (player == me)
+            cout << "You holded\n";
+        else
+            cout << players[!me] << " is holding, WATCHOUT!\n";
+    }
     else if (action == "wins")
     {
         if (player == me)
@@ -182,22 +194,23 @@ bool connectFourClient::handleNetworkEvent()
     return 1;
 }
 
-bool connectFourClient::enterToken()
+int connectFourClient::enterToken()
 {
     int returnVal;
     render();
     cin.clear();
-    fflush(stdin); //! vraag aan bart
-    cout << "place in column ('esc' to exit): ";
+    fflush(stdin);
+    cout << "place in column ('H' to hold, 'esc' to exit): ";
 
     while (true)
     {
         cin >> column;
-        // cout << "\nOK\n";
         if (column == 27) // escape
+            returnVal = 0;
+        else if (column == 72) // hold
             returnVal = 1;
         else if (board[0][column - '0' - 1] == 0) // Token can be placed
-            returnVal = 0;
+            returnVal = 2;
         else
         {
             cout << "column " << column << " is already full\nChoose an empty column ('esc' for exit): ";
@@ -298,9 +311,10 @@ void connectFourServer::waitForPlayers()
             msg_out = "connectFourServer>usernameApproved>" + gameID + ":";
             z_out.rebuild(msg_out.data(), msg_out.length());
             sockPush->send(z_out);
+            break;
         }
         cout << "\nsend: " + msg_out;
-    } while (players[1] == players[0] or players[1] == "shit"); // unique username check
+    } while (true);
 
     sockSub->setsockopt(ZMQ_SUBSCRIBE, clientID.data(), clientID.length());
     sockSub->setsockopt(ZMQ_UNSUBSCRIBE, "connectFourClient>", 18);
@@ -309,13 +323,11 @@ void connectFourServer::waitForPlayers()
 
     // Push players to clients
     msg_out = "connectFourServer>0>" + players[0];
-    // msg_out = serverID + "0>" + players[0];
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
     cout << "\nsend: " + msg_out;
 
     msg_out = "connectFourServer>1>" + players[1];
-    // msg_out = serverID + "1>" + players[1];
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
     cout << "\nsend: " + msg_out;
@@ -323,58 +335,69 @@ void connectFourServer::waitForPlayers()
 
 bool connectFourServer::handleNetworkEvent()
 {
-    if (player)
-        msg_out = serverID + "1>turn";
-    else
-        msg_out = serverID + "0>turn";
-
-    z_out.rebuild(msg_out.data(), msg_out.length());
-    sockPush->send(z_out);
-    cout << "\nsend: " + msg_out << endl;
-
-    do
+    while (true)
     {
-        sockSub->recv(z_in);
-        msg_in = z_in->to_string();
-        istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
-        action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
-    } while (action != "enter" && action != "quit");
+        if (player)
+            msg_out = serverID + "1>turn";
+        else
+            msg_out = serverID + "0>turn";
 
-    if (action == "enter")
-    {
-        receivedColumn = msg_in.substr(msg_in.find_last_of(":") + 1, 1);
-        column = receivedColumn.front();
-        msg_out = serverID + to_string(player) + ">enter:" + column;
-        updateBoard();
+        z_out.rebuild(msg_out.data(), msg_out.length());
+        sockPush->send(z_out);
+        cout << "\nsend: " + msg_out << endl;
+
+        do
+        {
+            sockSub->recv(z_in);
+            msg_in = z_in->to_string();
+            istringstream(msg_in.substr(msg_in.find_first_of('>') + 1, 1)) >> player;
+            action = msg_in.substr(msg_in.find_last_of('>') + 1, msg_in.find_last_of(':') - msg_in.find_last_of('>') - 1);
+        } while (action != "enter" && action != "quit" && action != "hold");
+
+        if (action == "enter")
+        {
+            receivedColumn = msg_in.substr(msg_in.find_last_of(":") + 1, 1);
+            column = receivedColumn.front();
+            msg_out = serverID + to_string(player) + ">enter:" + column;
+            updateBoard();
+        }
+        else if (action == "hold")
+        {
+            msg_out = serverID + to_string(player) + ">hold:";
+            playerHold = player;
+            wait = 3;
+        }
+        else if (action == "quit")
+            msg_out = serverID + to_string(player) + ">quit:";
+
+        cout << "Sending message: '" + msg_out + "'" << endl;
+        z_out.rebuild(msg_out.data(), msg_out.length());
+        sockPush->send(z_out);
+
+        cout << "playerhold: " << playerHold << "player: " << player << endl;
+
+        if (wait == 1)
+            wait = 0;
+        else
+        {
+            player = !player;
+            if (wait)
+                wait--;
+        }
+
+        if (action == "quit")
+            return 0;
+        else if (action == "hold")
+            continue;
+        else
+            return 1;
     }
-    else if (action == "quit")
-        msg_out = serverID + to_string(player) + ">quit:";
-
-    cout << "Sending message: '" + msg_out + "'" << endl;
-    z_out.rebuild(msg_out.data(), msg_out.length());
-    sockPush->send(z_out);
-
-    // next players turn
-    player = !player;
-
-    if (action == "quit")
-        return 0;
-    else
-        return 1;
 }
 
 void connectFourServer::declareWinner()
 {
-    // if (!closeServer)
-    // {
     msg_out = serverID + to_string(winner - 1) + ">wins:";
     cout << players[!player] << " wins.\n";
-    // }
-    // else
-    // {
-    //     msg_out = "connectFourServer>" + to_string(winner - 1) + ">close:";
-    //     cout << "Closing game thread: " << std::this_thread::get_id();
-    // }
     z_out.rebuild(msg_out.data(), msg_out.length());
     sockPush->send(z_out);
 }
